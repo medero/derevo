@@ -14,9 +14,11 @@ var tree = [
     { "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 }
 ];
 
-//var tree = [
-    //{ "id" : 1, "name" : "Me", root: true }
-//];
+/*
+var tree = [
+    { "id" : 1, "name" : "Me", root: true }
+];
+*/
 
 function getNodeById(id) {
     var temp = tree.filter(function(el) { return el.id == id });
@@ -38,7 +40,10 @@ var root = getRoot(),
     genCounter = 0,
     blockWidth = 100,
     blockHeight = 90,
-    padding = 10,
+
+    horizontalPadding = 45,
+    verticalPadding = 45,
+
     currentNode = root,
     canvas = $('#inner-canvas'),
     RELATIONSHIPS = {
@@ -48,7 +53,7 @@ var root = getRoot(),
 $.fn.center = function() {
     var width = canvas.width(), height = canvas.height();
 
-    var offset = $(this).offset();
+    //var offset = $(this).offset();
 
     $(this).css({
         top: ((width-blockWidth)/2),
@@ -59,8 +64,10 @@ $.fn.center = function() {
 }
 
 $.fn.scrollIntoView = function() {
-    var $wrap = $('#wrap');
-    $('.block').removeClass('active')
+    var $wrap = $('#wrap'),
+        $allBlocks = $('.block')
+
+    $allBlocks.removeClass('active')
         $(this).addClass('active')
 
     $wrap.animate({
@@ -82,13 +89,15 @@ function getCurrentNodeOffset() {
 }
 
 
+// generate the div block and return it
 function generateBlock( caption, offset ) {
-    var div = $('<div/>').addClass('block').css({
+
+    var $div = $('<div/>').addClass('block').css({
         top:offset.top,
         left: offset.left
-    }).text(caption)//.appendTo(canvas)
+    }).text(caption)
 
-    return div;
+    return $div;
 }
 
 function appendNode( context, data ) {
@@ -144,6 +153,7 @@ $(canvas).on('click', '.block', function() {
 
 function render( tree, currentNode ) {
 
+    // nest the tree by level
     var nested = d3.nest().key(function(o){ return o.level }).entries(tree)
 
     function compare(a,b) {
@@ -152,20 +162,19 @@ function render( tree, currentNode ) {
         return 0;
     }
 
+    // reorder this since it doesnt properly order them by the key
     nested = nested.sort(compare)
 
     var t = 0;
 
     nested.forEach(function(level){
 
-        t+= 10 + blockHeight;
+        t+= verticalPadding + blockHeight;
 
         var left = 0;
 
         level.values.forEach(function(o) {
-            left+= 10 + blockWidth;
-
-            console.log( o );
+            left+= horizontalPadding + blockWidth;
 
             var div = generateBlock ( o.name, {
                 top: t,
@@ -176,53 +185,9 @@ function render( tree, currentNode ) {
 
             o.element = div;
 
-            /*
-            $(div).css({
-                top: t,
-                left: left
-            });
-            */
         });
 
     });
-
-    /*
-    for ( var i = 0, l = tree.length; i<l; ++i ) {
-
-        var node = tree[i],
-            divExists = node.el;
-
-        // if the div hasn't been generated, create it and append it to the canvas
-        if ( !divExists ) {
-            node.el = generateBlock( node.name );
-            var div = $(node.el);
-        }
-
-        if ( i === 0 ) {
-            $(div).addClass('me').center()
-        } else {
-            var offset = getCurrentNodeOffset();
-
-            var t = offset.top; // same level
-            var l = offset.left - ( blockWidth - 25 );
-
-            $(div).css({
-                top: t,
-                left: l
-            });
-        }
-
-        // append the div to the canvas
-        if ( !divExists ) {
-            $(canvas).append(div);
-        }
-
-        // if this is the "current" node then scroll into it
-        if ( currentNode == node ) {
-            $(div).scrollIntoView();
-        }
-    }
-    */
 }
 
 // add the root node

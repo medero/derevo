@@ -1,6 +1,6 @@
 // this structure will be provided
 var tree = [
-    { "id": 1, "name": "Me", "dob": "1988", "children": [6,7,8,9], "partners" : [2], root:true, level: 0/*, parents: [12]*/ },
+    { "id": 1, "name": "Me", "dob": "1988", "children": [6,7,8,9], "partners" : [2], root:true, level: 0, parents: [12] },
     { "id": 2, "name": "Mistress", "dob": "1988", "children": [5], "partners": [1],  level: 0 },
     { "id": 3, "name": "Mistress 2", "dob": "1988",  "partners": [1], level: 0 },
     { "id": 4, "name": "Megan", "dob": "1988", "children": [6,7,8,9], "partners": [1], level: -1 },
@@ -11,7 +11,7 @@ var tree = [
     { "id": 9, "name": "Khalid", "dob": "1988", "parents": [1,4], level: -1 },
     { "id": 10, "name": "Child", "dob": "2008", "parents": [8,9], level: -2 },
     { "id": 11, "name": "SuperChild", "dob": "2008", "parents": [10], level: -3 },
-    //{ "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 },
+    { "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 }
 ];
 
 //var tree = [
@@ -59,12 +59,13 @@ $.fn.center = function() {
 }
 
 $.fn.scrollIntoView = function() {
+    var $wrap = $('#wrap');
     $('.block').removeClass('active')
         $(this).addClass('active')
 
-    $('#wrap').animate({
-        scrollTop: $(this).offset().top - $(canvas).offset().top - $('#wrap').height() / 2 + 60,
-        scrollLeft: $(this).offset().left - $(canvas).offset().left - $('#wrap').width() / 2 + 60
+    $wrap.animate({
+        scrollTop: $(this).offset().top - $(canvas).offset().top - $wrap.height() / 2 + 60,
+        scrollLeft: $(this).offset().left - $(canvas).offset().left - $wrap.width() / 2 + 60
     }, 500)
 
     return this;
@@ -96,63 +97,6 @@ function generateBlock( caption ) {
 
        return div;
    }
-
-function generateNodeHTML( type, relationship ) {
-
-    var div;
-
-    switch ( type ) {
-        case 'parents':
-            generateNodeHTML( 'mother' )
-
-                // specify 2nd argument so it pairs father with the mother as they are partners
-                generateNodeHTML( 'father', RELATIONSHIPS.PARTNER )
-                break;
-
-        case 'father':
-            var offset = getCurrentNodeOffset();
-
-            if ( relationship == RELATIONSHIPS.PARTNER ) {
-                var t = offset.top; // same level
-                var l = offset.left + ( blockWidth + 25 );
-            } else {
-                var t = offset.top - (blockHeight + 123 ); // higher
-                var l = offset.left - ( blockWidth - 25 );
-            }
-
-            div = generateBlock('father', { top: t, left: l})
-
-                div.scrollIntoView();
-            break;
-
-        case 'mother':
-            var offset = getCurrentNodeOffset();
-
-            if ( relationship == RELATIONSHIPS.PARTNER ) {
-                var t = offset.top; // same level
-                var l = offset.left - ( blockWidth - 25 );
-            } else {
-                var t = offset.top - (blockHeight + 123 ); // higher
-                var l = offset.left - ( blockWidth - 25 );
-            }
-
-            div = generateBlock('mother', { top: t, left: l})
-                div.scrollIntoView();
-            break;
-        case 'brother':
-        case 'sister':
-            var offset = getCurrentNodeOffset();
-            var t = offset.top - (blockHeight + 123 ); // higher
-            var l = offset.left - ( blockWidth - 25 );
-
-            div = generateBlock('brother', { top : t, left: l });
-            break;
-        case 'root':
-            window.div = div;
-            break;
-    }
-    return div;
-}
 
 function appendNode( context, data ) {
 
@@ -190,12 +134,6 @@ function appendNode( context, data ) {
 
     render( tree, newNode );
 
-    /*
-    var div = generateNodeHTML( data.relationship );
-
-    // append it to the canvas
-    $(div).appendTo(canvas)
-    */
 }
 
 $('form').on('submit', function(e) { 
@@ -215,7 +153,6 @@ function render( tree, currentNode ) {
 
     var nested = d3.nest().key(function(o){ return o.level }).entries(tree)
 
-    /*
     function compare(a,b) {
         if (a.key < b.key) return 1;
         if (a.key > b.key) return -11;
@@ -223,7 +160,6 @@ function render( tree, currentNode ) {
     }
 
     nested = nested.sort(compare)
-    */
 
     var t = 0;
 

@@ -35,11 +35,6 @@ function validate( data ) {
         {name: 'partners', 'label': 'partner'},
     ];
 
-    function getNodeById(id) {
-        var temp = data.filter(function(el) { return el.id == id });
-        return temp.length ? temp[0] : null;
-    }
-
     // check for invalid ids in children, parents, partners or siblings
     data.forEach(function(person) {
         listTypes.forEach(function(type) {

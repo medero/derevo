@@ -1,33 +1,45 @@
 // this structure will be provided
-var data = [
-    { "id": 9000, "name": "Mistress", "dob": "1988", "children": [100], "no_parent" : true, "partners": [16] },
-    { "id": 9001, "name": "Mistress 2", "dob": "1988", "no_parent" : true, "partners": [16] },
-    { "id": 16, "name": "Me", "dob": "1988", "children": [12,13,3,11], "no_parent": true, "partners" : [9000], root:true },
-    { "id": 10, "name": "Megan", "dob": "1988", "children": [12,13,3,11], "no_parent": true, "partners": [16] },
-    { "id": 100, "name": "Hidden Son", "dob": "1988", "parents": [9000,16] },
-    { "id": 12, "name": "Jeezy", "dob": "1988", "parents": [16,10] },
-    { "id": 13, "name": "Leo", "dob": "1988", "parents": [16,10] },
-    { "id": 3, "name": "Chopper", "dob": "1988", "parents": [16,10] },
-    { "id": 11, "name": "Khalid", "dob": "1988", "parents": [16,10] },
-    { "id": 14, "name": "Child", "dob": "2008", "parents": [3,11] }
+var tree = [
+    { "id": 1, "name": "Me", "dob": "1988", "children": [6,7,8,9], "partners" : [2], root:true, level: 0/*, parents: [12]*/ },
+    { "id": 2, "name": "Mistress", "dob": "1988", "children": [5], "partners": [1],  level: 0 },
+    { "id": 3, "name": "Mistress 2", "dob": "1988",  "partners": [1], level: 0 },
+    { "id": 4, "name": "Megan", "dob": "1988", "children": [6,7,8,9], "partners": [1], level: -1 },
+    { "id": 5, "name": "Hidden Son", "dob": "1988", "parents": [2,1], level: -1 },
+    { "id": 6, "name": "Jeezy", "dob": "1988", "parents": [1,4], level: -1 },
+    { "id": 7, "name": "Leo", "dob": "1988", "children": [11], "parents": [1,4], level: -1 },
+    { "id": 8, "name": "Chopper", "dob": "1988", "parents": [1,4], level: -1 },
+    { "id": 9, "name": "Khalid", "dob": "1988", "parents": [1,4], level: -1 },
+    { "id": 10, "name": "Child", "dob": "2008", "parents": [8,9], level: -2 },
+    { "id": 11, "name": "SuperChild", "dob": "2008", "parents": [10], level: -3 },
+    //{ "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 },
 ];
 
+//var tree = [
+    //{ "id" : 1, "name" : "Me", root: true }
+//];
+
+function getNodeById(id) {
+    var temp = tree.filter(function(el) { return el.id == id });
+    return temp.length ? temp[0] : null;
+}
+
 // log any errors with the data structure
-validate(data);
+validate(tree);
 
 // we have a valid dataset. parse it.
 function getRoot() {
-    return data.filter(function(node) { 
+    return tree.filter(function(node) { 
         return node.root === true;
     })[0];
 }
 
 var root = getRoot(),
+    guid = 1,
     genCounter = 0,
     blockWidth = 100,
     blockHeight = 90,
     padding = 10,
-    currentNode = null,
+    currentNode = root,
     canvas = $('#inner-canvas'),
     RELATIONSHIPS = {
         'PARTNER' : 1
@@ -50,8 +62,6 @@ $.fn.scrollIntoView = function() {
     $('.block').removeClass('active')
         $(this).addClass('active')
 
-        currentNode = this;
-
     $('#wrap').animate({
         scrollTop: $(this).offset().top - $(canvas).offset().top - $('#wrap').height() / 2 + 60,
         scrollLeft: $(this).offset().left - $(canvas).offset().left - $('#wrap').width() / 2 + 60
@@ -62,7 +72,7 @@ $.fn.scrollIntoView = function() {
 
 // get the current nodes offset to use as a base for the next node
 function getCurrentNodeOffset() {
-    var nodeOffset = $(currentNode).offset(), parentOffset = $(canvas).offset();
+    var nodeOffset = $(currentNode.el).offset(), parentOffset = $(canvas).offset();
     var offset = {
         top: nodeOffset.top - parentOffset.top,
         left: nodeOffset.left - parentOffset.left
@@ -70,31 +80,33 @@ function getCurrentNodeOffset() {
     return offset;
 }
 
+/*
 function generateBlock( caption ) {
     var div = $('<div/>').addClass('block').css({
-    }).text(caption).appendTo(canvas)
-
+    }).text(caption)
     return div;
 }
+*/
 
-/*
    function generateBlock( caption, offset ) {
-   var div = $('<div/>').addClass('block').css({
-   top:offset.top,
-   left: offset.left
-   }).text(caption).appendTo(canvas)
+       var div = $('<div/>').addClass('block').css({
+           top:offset.top,
+           left: offset.left
+       }).text(caption)//.appendTo(canvas)
 
-   return div;
+       return div;
    }
-   */
 
-function addNode( type, relationship ) {
+function generateNodeHTML( type, relationship ) {
+
+    var div;
+
     switch ( type ) {
         case 'parents':
-            addNode( 'mother' )
+            generateNodeHTML( 'mother' )
 
                 // specify 2nd argument so it pairs father with the mother as they are partners
-                addNode( 'father', RELATIONSHIPS.PARTNER )
+                generateNodeHTML( 'father', RELATIONSHIPS.PARTNER )
                 break;
 
         case 'father':
@@ -108,7 +120,7 @@ function addNode( type, relationship ) {
                 var l = offset.left - ( blockWidth - 25 );
             }
 
-            var div = generateBlock('father', { top: t, left: l})
+            div = generateBlock('father', { top: t, left: l})
 
                 div.scrollIntoView();
             break;
@@ -124,31 +136,74 @@ function addNode( type, relationship ) {
                 var l = offset.left - ( blockWidth - 25 );
             }
 
-            var div = generateBlock('mother', { top: t, left: l})
+            div = generateBlock('mother', { top: t, left: l})
                 div.scrollIntoView();
             break;
         case 'brother':
         case 'sister':
             var offset = getCurrentNodeOffset();
+            var t = offset.top - (blockHeight + 123 ); // higher
+            var l = offset.left - ( blockWidth - 25 );
 
-            getSiblings( currentNode );
+            div = generateBlock('brother', { top : t, left: l });
             break;
         case 'root':
-            var div = generateBlock('me' );
             window.div = div;
-            $(div).addClass('me').center()
-            $(div).scrollIntoView();
             break;
     }
+    return div;
 }
 
-function getSiblings( node ) {
+function appendNode( context, data ) {
+
+    var newNode = {
+        siblings: [],
+        children: [],
+        partners: [],
+        parents: [],
+        el: null
+    },
+
+    id = ++guid;
+
+    switch ( data.relationship ) {
+        case 'brother':
+        case 'sister':
+            newNode.siblings.push( id );
+        break;
+
+        case 'mother':
+        case 'father':
+            newNode.parents.push( id );
+        break;
+
+        case 'partner':
+            newNode.partners.push( id );
+        break;
+    }
+
+    // push onto the list
+    tree.push( newNode );
+
+    // set the current node
+    currentNode = newNode;
+
+    render( tree, newNode );
+
+    /*
+    var div = generateNodeHTML( data.relationship );
+
+    // append it to the canvas
+    $(div).appendTo(canvas)
+    */
 }
 
 $('form').on('submit', function(e) { 
     e.preventDefault();
 
-    addNode( $('#add').val() );
+    appendNode( currentNode, {
+        relationship: $('#add').val()
+    });
 });
 
 // on clicking any block, scroll into that block
@@ -156,7 +211,88 @@ $(canvas).on('click', '.block', function() {
     $(this).scrollIntoView();
 });
 
+function render( tree, currentNode ) {
+
+    var nested = d3.nest().key(function(o){ return o.level }).entries(tree)
+
+    /*
+    function compare(a,b) {
+        if (a.key < b.key) return 1;
+        if (a.key > b.key) return -11;
+        return 0;
+    }
+
+    nested = nested.sort(compare)
+    */
+
+    var t = 0;
+
+    nested.forEach(function(level){
+
+        t+= 10 + blockHeight;
+
+        var left = 0;
+
+        level.values.forEach(function(o) {
+            left+= 10 + blockWidth;
+
+            console.log( o );
+            var div = generateBlock ( o.name, {
+                top: t,
+                left: left
+            });
+            $(canvas).append(div);
+
+            /*
+            $(div).css({
+                top: t,
+                left: left
+            });
+            */
+        });
+
+    });
+
+    /*
+    for ( var i = 0, l = tree.length; i<l; ++i ) {
+
+        var node = tree[i],
+            divExists = node.el;
+
+        // if the div hasn't been generated, create it and append it to the canvas
+        if ( !divExists ) {
+            node.el = generateBlock( node.name );
+            var div = $(node.el);
+        }
+
+        if ( i === 0 ) {
+            $(div).addClass('me').center()
+        } else {
+            var offset = getCurrentNodeOffset();
+
+            var t = offset.top; // same level
+            var l = offset.left - ( blockWidth - 25 );
+
+            $(div).css({
+                top: t,
+                left: l
+            });
+        }
+
+        // append the div to the canvas
+        if ( !divExists ) {
+            $(canvas).append(div);
+        }
+
+        // if this is the "current" node then scroll into it
+        if ( currentNode == node ) {
+            $(div).scrollIntoView();
+        }
+    }
+    */
+}
+
 // add the root node
 $(window).load(function() {
-    addNode('root');
+    render(tree, tree[0]);
 });

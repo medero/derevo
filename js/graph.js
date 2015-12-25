@@ -73,7 +73,7 @@ $.fn.scrollIntoView = function() {
 
 // get the current nodes offset to use as a base for the next node
 function getCurrentNodeOffset() {
-    var nodeOffset = $(currentNode.el).offset(), parentOffset = $(canvas).offset();
+    var nodeOffset = $(currentNode.element).offset(), parentOffset = $(canvas).offset();
     var offset = {
         top: nodeOffset.top - parentOffset.top,
         left: nodeOffset.left - parentOffset.left
@@ -81,22 +81,15 @@ function getCurrentNodeOffset() {
     return offset;
 }
 
-/*
-function generateBlock( caption ) {
+
+function generateBlock( caption, offset ) {
     var div = $('<div/>').addClass('block').css({
-    }).text(caption)
+        top:offset.top,
+        left: offset.left
+    }).text(caption)//.appendTo(canvas)
+
     return div;
 }
-*/
-
-   function generateBlock( caption, offset ) {
-       var div = $('<div/>').addClass('block').css({
-           top:offset.top,
-           left: offset.left
-       }).text(caption)//.appendTo(canvas)
-
-       return div;
-   }
 
 function appendNode( context, data ) {
 
@@ -105,7 +98,7 @@ function appendNode( context, data ) {
         children: [],
         partners: [],
         parents: [],
-        el: null
+        element: null
     },
 
     id = ++guid;
@@ -154,8 +147,8 @@ function render( tree, currentNode ) {
     var nested = d3.nest().key(function(o){ return o.level }).entries(tree)
 
     function compare(a,b) {
-        if (a.key < b.key) return 1;
-        if (a.key > b.key) return -11;
+        if (parseInt(a.key, 10) > parseInt(b.key,10)) return -1;
+        if (parseInt(a.key, 10) < parseInt(b.key,10)) return 1;
         return 0;
     }
 
@@ -173,11 +166,15 @@ function render( tree, currentNode ) {
             left+= 10 + blockWidth;
 
             console.log( o );
+
             var div = generateBlock ( o.name, {
                 top: t,
                 left: left
             });
+
             $(canvas).append(div);
+
+            o.element = div;
 
             /*
             $(div).css({

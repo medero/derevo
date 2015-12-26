@@ -90,12 +90,14 @@ function getCurrentNodeOffset() {
 
 
 // generate the div block and return it
-function generateBlock( caption, offset ) {
+function generateBlock( person, offset ) {
 
     var $div = $('<div/>').addClass('block').css({
         top:offset.top,
         left: offset.left
-    }).text(caption)
+    }).text(person.name)
+
+    $div.attr('data-node', person.id );
 
     return $div[0];
 }
@@ -147,6 +149,10 @@ function appendNode( context, person ) {
     // set the current node
     currentNode = newNode;
 
+    // clear the tree
+    clearTree();
+
+    // render the whole tree
     render( tree, newNode );
 
 }
@@ -177,7 +183,13 @@ function clearForm() {
 
 // on clicking any block, scroll into that block
 $(canvas).on('click', '.block', function() {
+
+    // scroll into the view
     $(this).scrollIntoView();
+
+    // reset the current node
+    currentNode = getNodeById( $(this).attr('data-node'));
+
 });
 
 function render( tree, currentNode ) {
@@ -205,21 +217,25 @@ function render( tree, currentNode ) {
 
         var left = 0;
 
-        level.values.forEach(function(o) {
+        level.values.forEach(function(person) {
             left+= horizontalPadding + blockWidth;
 
-            var div = generateBlock ( o.name, {
+            var div = generateBlock ( person, {
                 top: t,
                 left: left
             });
 
             $(canvas).append(div);
 
-            o.element = div;
+            person.element = div;
 
         });
 
     });
+}
+
+function clearTree() {
+    $('.block').remove();
 }
 
 // add the root node

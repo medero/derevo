@@ -14,11 +14,11 @@ var tree = [
     { "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 }
 ];
 
-/*
+var edges = [];
+
 var tree = [
-    { "id" : 1, "name" : "Me", root: true }
+    { "id" : 1, "name" : "Me", root: true, siblings: [], children: [], parents: [], partners: [], level: 0 }
 ];
-*/
 
 function getNodeById(id) {
     var temp = tree.filter(function(el) { return el.id == id });
@@ -97,34 +97,47 @@ function generateBlock( caption, offset ) {
         left: offset.left
     }).text(caption)
 
-    return $div;
+    return $div[0];
 }
 
-function appendNode( context, data ) {
+function appendNode( context, person ) {
 
     var newNode = {
         siblings: [],
         children: [],
         partners: [],
         parents: [],
-        element: null
+        element: null,
+        level: null,
+        name: ''
     },
 
     id = ++guid;
 
-    switch ( data.relationship ) {
+    newNode.id = id;
+    newNode.name = person.name;
+
+    switch ( person.relationship ) {
         case 'brother':
         case 'sister':
-            newNode.siblings.push( id );
+            currentNode.siblings.push( id );
+            newNode.level = currentNode.level;
         break;
 
         case 'mother':
         case 'father':
-            newNode.parents.push( id );
+            currentNode.parents.push( id );
+            newNode.level = currentNode.level + 1;
         break;
 
         case 'partner':
-            newNode.partners.push( id );
+            currentNode.partners.push( id );
+            newNode.level = currentNode.level;
+        break;
+
+        case 'child':
+            currentNode.children.push( id );
+            newNode.level = currentNode.level -1;
         break;
     }
 
@@ -139,12 +152,28 @@ function appendNode( context, data ) {
 }
 
 $('form').on('submit', function(e) { 
+
     e.preventDefault();
 
+    if ( $('#name-person').val().length === 0 ) {
+        alert('Enter a name.');
+        return;
+    }
+
     appendNode( currentNode, {
-        relationship: $('#add').val()
+        relationship: $('#add').val(),
+        name: $('#name-person').val()
     });
+
+    $(currentNode.element).addClass('active')
+
+    clearForm();
+
 });
+
+function clearForm() {
+    $('#enter-person').find(':input').not('[type="submit"]').val('');
+}
 
 // on clicking any block, scroll into that block
 $(canvas).on('click', '.block', function() {
@@ -157,8 +186,11 @@ function render( tree, currentNode ) {
     var nested = d3.nest().key(function(o){ return o.level }).entries(tree)
 
     function compare(a,b) {
+
         if (parseInt(a.key, 10) > parseInt(b.key,10)) return -1;
+
         if (parseInt(a.key, 10) < parseInt(b.key,10)) return 1;
+
         return 0;
     }
 
@@ -167,7 +199,7 @@ function render( tree, currentNode ) {
 
     var t = 0;
 
-    nested.forEach(function(level){
+    nested.forEach(function(level) {
 
         t+= verticalPadding + blockHeight;
 

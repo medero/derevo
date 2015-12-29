@@ -25,3 +25,7 @@
 form { position: absolute; top:0; left: 0; }
 
 body { overflow: hidden; }
+
+section#rules {
+    float: right;
+}

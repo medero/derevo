@@ -14,15 +14,116 @@ var tree = [
     { "id": 12, "name": "Grandpap", "dob": "2008", children: [1], level: 1 }
 ];
 
-var edges = [];
+function Queue() {
 
+    var items = [];
+
+    this.enqueue = function( element ) {
+        items.push( element );
+    }
+
+    this.dequeue = function() {
+        return items.shift();
+
+    }
+
+    this.front = function() {
+        return items[0];
+    }
+
+    this.clear = function() {
+        items = [];
+    }
+
+    this.isEmpty = function() {
+        return items.length == 0;
+    }
+
+    this.size = function() {
+        return items.length;
+    }
+
+    this.print = function() {
+        console.log( items.toString() );
+    }
+};
+
+function Dictionary() {
+
+    var items = {};
+
+    this.set = function(key, value){
+        items[key] = value; //{1}
+    };
+
+    this.remove = function(key){
+        if (this.has(key)){
+            delete items[key];
+            return true;
+        }
+        return false;
+    };
+
+    this.has = function(key){
+        return items.hasOwnProperty(key);
+        //return value in items;
+    };
+
+    this.get = function(key) {
+        return this.has(key) ? items[key] : undefined;
+    };
+
+    this.clear = function(){
+        items = {};
+    };
+
+    this.size = function(){
+        return Object.keys(items).length;
+    };
+
+    this.keys = function(){
+        return Object.keys(items);
+    };
+
+    this.values = function(){
+        var values = [];
+        for (var k in items) {
+            if (this.has(k)) {
+                values.push(items[k]);
+            }
+        }
+        return values;
+    };
+
+    this.each = function(fn) {
+        for (var k in items) {
+            if (this.has(k)) {
+                fn(k, items[k]);
+            }
+        }
+    };
+
+    this.getItems = function(){
+        return items;
+    }
+}
+
+/*
 var tree = [
     { "id" : 1, "name" : "Me", root: true, siblings: [], children: [], parents: [], partners: [], level: 0 }
+];
+*/
+
+var edges = [
 ];
 
 function getNodeById(id) {
     var temp = tree.filter(function(el) { return el.id == id });
     return temp.length ? temp[0] : null;
+}
+
+function expose(variable) {
+    window[variable] = variable;
 }
 
 // log any errors with the data structure
@@ -61,7 +162,7 @@ $.fn.center = function() {
     })
 
     return this;
-}
+};
 
 $.fn.scrollIntoView = function() {
     var $wrap = $('#wrap'),
@@ -76,7 +177,7 @@ $.fn.scrollIntoView = function() {
     }, 500)
 
     return this;
-}
+};
 
 // get the current nodes offset to use as a base for the next node
 function getCurrentNodeOffset() {
@@ -87,7 +188,6 @@ function getCurrentNodeOffset() {
     };
     return offset;
 }
-
 
 // generate the div block and return it
 function generateBlock( person, offset ) {
@@ -192,6 +292,8 @@ $(canvas).on('click', '.block', function() {
 
 });
 
+var dict = new Dictionary;
+
 function render( tree, currentNode ) {
 
     // nest the tree by level
@@ -207,8 +309,13 @@ function render( tree, currentNode ) {
     }
 
     // reorder this since it doesnt properly order them by the key
-    nested = nested.sort(compare)
+    nested = nested.sort(compare);
 
+    var limit = 10, counter = 0, first = null;
+
+    walk( nested[0]['values'][0] );
+
+    /*
     var t = 0;
 
     nested.forEach(function(level) {
@@ -232,7 +339,46 @@ function render( tree, currentNode ) {
         });
 
     });
+    */
+
+    function walk( person, fromPersonId, callback ) {
+
+        if ( callback )
+            callback();
+
+        if ( dict.get(person.id) == null )
+            dict.set(person.id, []);
+
+        if ( fromPersonId !== undefined ) {
+            if ( dict.get(fromPersonId) == null ) {
+                dict.set(fromPersonId, []);
+            }
+
+            if ( dict.get(fromPersonId).indexOf(person.id) == -1 )
+                dict.get(fromPersonId).push( person.id );
+        }
+
+        console.log( person.name );
+        counter++;
+
+        var iterable = ['partners', 'siblings', 'children', 'parents'];
+        iterable.forEach(function(property) {
+            if ( person[property] ) {
+                person[property].forEach(function(nodeId) {
+
+                    console.log(dict.get(person.id));
+                    if ( dict.get(person.id).indexOf(nodeId) == -1 )
+                        walk( getNodeById( nodeId ), person.id, function() {
+                            dict.get(person.id).push( nodeId );
+                        });
+                });
+            }
+        });
+
+
+    }
 }
+
 
 function clearTree() {
     $('.block').remove();
